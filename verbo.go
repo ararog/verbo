@@ -3,14 +3,22 @@ package verbo
 import (
 	"strings"
   "fmt"
+  "regexp"
+  "math"
 )
 
 func Camelize(str string, decapitalize bool) (string) {
-  str := trim(str).replace(/[-_\s]+(.)?/g, function(match, c) {
-    return c ? c.toUpperCase() : ""
+  str = strings.Trim(str)
+  re := regex.MustCompile("[-_\\s]+(.)?")
+  str = re.replaceAllStringFunc(str, func(c string) string {
+		if c {
+    	return strings.ToUpper(c)
+		} else {
+			return ""
+		}
   })
 
-  if (decapitalize === true) {
+  if decapitalize == true {
     return decap(str)
   } else {
     return str
@@ -18,90 +26,125 @@ func Camelize(str string, decapitalize bool) (string) {
 }
 
 func Capitalize(str string, lowercaseRest bool) (string) {
-  str = makeString(str)
-  var remainingChars = !lowercaseRest ? str.slice(1) : str.slice(1).toLowerCase()
-
-  return str.charAt(0).toUpperCase() + remainingChars
+	if !lowercaseRest {
+  	remainingChars := str[1:]
+	} else {
+		remainingChars := strings.ToLower(str[1:])
+	}
+  return strings.ToUpper(str[0]) + remainingChars
 };
 
 func Chop(str string, step int) (string) {
-  if (str == null) return []
-  str = String(str)
-  step = ~~step
-  return step > 0 ? str.match(new RegExp(".{1," + step + "}", "g")) : [str]
+  if str == "" {
+		var a []string
+		return a
+	}
+
+  step = math.Floor(step)
+	if step > 0 {
+		re := regex.MustCompile(".{1," + step + "}")
+  	return re.match(str)
+	} else {
+		a := []string{str}
+		return a
+	}
 }
 
 func Classify(str string) (string) {
-  str = makeString(str)
-  return capitalize(camelize(str.replace(/[\W_]/g, " ")).replace(/\s/g, ""))
+  re := regex.MustCompile("[\\W_]")
+  strWithSpaces := re.replaceAllString(str, " ")
+  re = regex.MustCompile("\\s")
+  strNoSpaces := re.replaceAllString(strWithSpaces, "")
+  return Capitalize(Camelize(strNoSpaces))
 };
 
 func Clean(str string) (string) {
- return trim(str).replace(/\s\s+/g, ' ')
+  str = strings.Trim(str)
+
+  return re.ReplaceAllString(str, " ")
 }
 
 func Dasherize(str string) (string) {
-  return trim(str).replace(/([A-Z])/g, "-$1").replace(/[-_\s]+/g, "-").toLowerCase()
+  str = strings.Trim(str)
+	re := regex.MustCompile("([A-Z])")
+	str = re.ReplaceAllString(str, "-$1")
+	re = regex.MustCompile("[-_\\s]+")
+	str = re.ReplaceAllString(str, "-")
+  return strings.ToLower(str)
 }
 
 func Decapitalize(str string) (string) {
-  str = makeString(str)
-  return str.charAt(0).toLowerCase() + str.slice(1)
+  return strings.ToLower(str[0]) + str[1:]
 }
 
 func EndsWith(str string, ends, position int) (string) {
-  str = makeString(str)
-  ends = "" + ends
-  if (typeof position == "undefined") {
-    position = str.length - ends.length
+  strEnds := "" + ends
+  if position == -1 {
+    newPosition := len(str) - len(strEnds)
   } else {
-    position = Math.min(toPositive(position), str.length) - ends.length
+    newPosition := math.Min(toPositive(position), len(str) - len(strEnds))
   }
-  return position >= 0 && str.indexOf(ends, position) === position
+  return newPosition >= 0 && str.indexOf(strEnds, newPosition) == newPosition
 }
 
 func Humanize(str string) (string) {
-  return capitalize(trim(underscored(str).replace(/_id$/, "").replace(/_/g, " ")))
+	str = Underscored(str)
+	re := regex.MustCompile("_id$")
+	str = re.ReplaceAllString(str, "")
+	re = regex.MustCompile("_")
+	str = re.ReplaceAllString(str, " ")
+  return Capitalize(strings.Trim(str))
 }
 
 func IsBlank(str string) {
-  return (/^\s*$/).test(makeString(str))
+	re := regex.MustCompile("^\\s*$")
+  return re.MatchString(str)
 }
 
-func Levenshtein(str1 string, str2 string) {
-
-  str1 = makeString(str1)
-  str2 = makeString(str2)
+func Levenshtein(str1, str2 string) {
 
   // Short cut cases
-  if (str1 === str2) return 0
-  if (!str1 || !str2) return Math.max(str1.length, str2.length)
+  if str1 == str2 {
+		return 0
+	}
+  if !str1 || !str2 {
+		return math.Max(len(str1), len(str2))
+	}
 
   // two rows
-  var prevRow = new Array(str2.length + 1)
+	size := len(str2) + 1
+  var prevRow [size]int
 
   // initialise previous row
-  for (var i = 0; i < prevRow.length; ++i) {
+  for i := 0; i < len(prevRow); i+=1 {
     prevRow[i] = i
   }
 
   // calculate current row distance from previous row
-  for (i = 0; i < str1.length; ++i) {
-    var nextCol = i + 1
+  for i := 0; i < len(str1); i+=1 {
+    nextCol := i + 1
 
-    for (var j = 0; j < str2.length; ++j) {
-      var curCol = nextCol
+    for j := 0; j < len(str2); j+=1 {
+      curCol := nextCol
 
       // substution
-      nextCol = prevRow[j] + ( (str1.charAt(i) === str2.charAt(j)) ? 0 : 1 )
-      // insertion
-      var tmp = curCol + 1
-      if (nextCol > tmp) {
+			val := 0
+			if str1[i] == str2[j] {
+				val = 0
+			} else {
+				val = 1
+			}
+
+      nextCol := prevRow[j] + val
+
+			// insertion
+      tmp := curCol + 1
+      if nextCol > tmp {
         nextCol = tmp
       }
       // deletion
       tmp = prevRow[j + 1] + 1
-      if (nextCol > tmp) {
+      if nextCol > tmp {
         nextCol = tmp
       }
 
@@ -117,107 +160,154 @@ func Levenshtein(str1 string, str2 string) {
 }
 
 func Lines(str string) {
-  if (str == null) return []
-  return String(str).split(/\r\n?|\n/)
+  if str == "" {
+		var a []string
+		return a
+	}
+	re := regex.MustCompile("\\r\\n?|\\n")
+  return re.Split(str)
 }
 
-func Pred(str string) {
+func Pred(str string) (string) {
   return adjacent(str, -1)
 }
 
 func Prune(str string, length int, pruneStr string) (string) {
-  str = makeString(str);
-  length = ~~length;
-  pruneStr = pruneStr != null ? String(pruneStr) : "..."
+  length = math.Floor(length)
+	if pruneStr != "" {
+  	pruneStr = pruneStr
+	} else {
+		pruneStr = "..."
+	}
 
-  if (str.length <= length) return str
+  if len(str) <= length {
+		return str
+	}
 
-  var tmpl = function(c) {
-      return c.toUpperCase() !== c.toLowerCase() ? 'A' : ' '
-    },
-    template = str.slice(0, length + 1).replace(/.(?=\W*\w*$)/g, tmpl) // 'Hello, world' -> 'HellAA AAAAA'
-
-  if (template.slice(template.length - 2).match(/\w\w/)) {
-    template = template.replace(/\s*\S+$/, "")
-  } else {
-    template = rtrim(template.slice(0, template.length - 1))
+  tmpl := func(c string) string {
+		if strings.ToUpper(c) != strings.ToLower(c) {
+      return "A"
+		} else {
+			return " "
+		}
   }
 
-  return (template + pruneStr).length > str.length ? str : str.slice(0, template.length) + pruneStr;
+	re := regex.MustCompile("/.(?=\\W*\\w*$)")
+  template := re.ReplaceAllStringFunc(str[0: length + 1], tmpl) // 'Hello, world' -> 'HellAA AAAAA'
+
+	re = regex.MustCompile("\\w\\w")
+  if re.MatchString(template[len(template) - 2:]) {
+    template = template.ReplaceAllString("\\s*\\S+$", "")
+  } else {
+    template = strings.Rtrim(template[0 : len(template) - 1])
+  }
+
+	if len(template + pruneStr) > len(str) {
+  	return str
+	} else {
+		return str[0 : len(template)] + pruneStr
+	}
 }
 
-func Repeat(str string, qty int, separator) {
-  str = makeString(str)
-
-  qty = ~~qty
+func Repeat(str string, qty int, separator string) (string) {
+  qty = math.Floor(qty)
 
   // using faster implementation if separator is not needed;
-  if (separator == null) {
+  if separator == "" {
     return strRepeat(str, qty)
   }
 
-  // this one is about 300x slower in Google Chrome
-  /*eslint no-empty: 0*/
-  for (var repeat = []; qty > 0; repeat[--qty] = str) {}
-  return repeat.join(separator)
+	var repeat []string
+  for qty > 0; repeat[qty] = str {
+
+	}
+  return strings.Join(repeat, separator)
 }
 
-func Reverse(str string) {
-  return chars(str).reverse().join("")
+func Reverse(str string) (string) {
+  return strings.Join(chars(str).reverse(), "")
 }
 
-func Slugify(str string) {
-  return trim(dasherize(cleanDiacritics(str).replace(/[^\w\s-]/g, '-').toLowerCase()), '-')
+func Slugify(str string) (string) {
+	re := regex.MustCompile("[^\\w\\s-]")
+	str = re.ReplaceAllString(str, "-")
+	str = strings.ToLower(str)
+	str = CleanDiacritics(str)
+  return strings.Trim(Dasherize(str), "-")
 }
 
-func Splice(str string, i, howmany, substr) {
-  var arr = chars(str)
-  arr.splice(~~i, ~~howmany, substr);
-  return arr.join("")
+func Splice(str string, i, howmany int, substr string) {
+  arr := chars(str)
+  arr.splice(^i, ^howmany, substr);
+  return strings.Join(arr, "")
 }
 
-func StartsWith(str, starts, position) {
-  str = makeString(str)
+func StartsWith(str string, starts, position int) (bool) {
   starts = "" + starts
-  position = position == null ? 0 : Math.min(toPositive(position), str.length)
-  return str.lastIndexOf(starts, position) === position
+	if position == "" {
+  	position = 0
+	} else {
+		position = math.Min(toPositive(position), len(str))
+	}
+  return str.lastIndexOf(starts, position) == position
 }
 
-func Succ(str string) {
+func Succ(str string) (string) {
  return adjacent(str, 1)
 }
 
-func SwapCase(str string) {
-  return makeString(str).replace(/\S/g, function(c) {
-    return c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()
+func SwapCase(str string) (string) {
+  re := regex.MustCompile("\\S")
+  return re.ReplaceAllStringFunc(str, func(c string) string {
+		if c == strings.ToUpper(c) {
+    	return strings.ToLower(c)
+		} else {
+			return strings.ToUpper(c)
+		}
   })
 }
 
 func Titleize(str string) (string) {
-  return makeString(str).toLowerCase().replace(/(?:^|\s|-)\S/g, function(c) {
-    return c.toUpperCase()
+	str = strings.ToLower(str)
+	re := regex.MustCompile("(?:^|\\s|-)\\S")
+  return re.ReplaceAllStringFunc(lowerStr, func(c string) string {
+    return strings.ToUpper(c)
   })
 }
 
 func Truncate(str string, length int, truncateStr string) (string) {
-  str = makeString(str);
   truncateStr = truncateStr || "..."
-  length = ~~length
-  return str.length > length ? str.slice(0, length) + truncateStr : str
+  length = math.Floor(length)
+	if len(str) > length {
+  	return str[0 : length] + truncateStr
+	} else {
+		return str
+	}
 }
 
 func Underscored(str string) (string) {
-  return trim(str).replace(/([a-z\d])([A-Z]+)/g, "$1_$2").replace(/[-\s]+/g, "_").toLowerCase()
+	str = strings.Trim(str)
+	re := regex.MustCompile("([a-z\\d])([A-Z]+)")
+	str = re.ReplaceAllString(str, "$1_$2")
+	re = regex.MustCompile("[-\\s]+")
+	str = re.ReplaceAllString(str, "_")
+  return strings.ToLower(str)
 }
 
-func Unquote(str string, quoteChar) (string) {
+func Unquote(str, quoteChar string) (string) {
   quoteChar = quoteChar || "\"";
-  if (str[0] === quoteChar && str[str.length - 1] === quoteChar)
-    return str.slice(1, str.length - 1)
-  else return str
+  if str[0] == quoteChar && str[len(str) - 1] == quoteChar {
+    return str[1 : len(str) - 1]
+	} else {
+		return str
+	}
 }
 
-func Words(str string, delimiter) {
-  if (isBlank(str)) return []
-  return trim(str, delimiter).split(delimiter || /\s+/)
+func Words(str, delimiter string) {
+  if IsBlank(str) {
+		var a []string
+		return a
+	}
+	re := regex.MustCompile(delimiter || "\\s+")
+  return re.Split(strings.Trim(str, delimiter), -1)
 }
