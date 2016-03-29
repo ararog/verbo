@@ -2,16 +2,15 @@ package verbo
 
 import (
 	"strings"
-  "fmt"
   "regexp"
   "math"
 )
 
 func Camelize(str string, decapitalize bool) (string) {
-  str = strings.Trim(str)
-  re := regex.MustCompile("[-_\\s]+(.)?")
-  str = re.replaceAllStringFunc(str, func(c string) string {
-		if c {
+  str = strings.TrimSpace(str)
+  re := regexp.MustCompile("[-_\\s]+(.)?")
+  str = re.ReplaceAllStringFunc(str, func(c string) string {
+		if c != "" {
     	return strings.ToUpper(c)
 		} else {
 			return ""
@@ -19,13 +18,14 @@ func Camelize(str string, decapitalize bool) (string) {
   })
 
   if decapitalize == true {
-    return decap(str)
+    return Decapitalize(str)
   } else {
     return str
   }
 }
 
 func Capitalize(str string, lowercaseRest bool) (string) {
+	var remainingChars string
 	if !lowercaseRest {
   	remainingChars := str[1:]
 	} else {
@@ -34,7 +34,7 @@ func Capitalize(str string, lowercaseRest bool) (string) {
   return strings.ToUpper(str[0]) + remainingChars
 };
 
-func Chop(str string, step int) (string) {
+func Chop(str string, step int) ([]string) {
   if str == "" {
 		var a []string
 		return a
@@ -42,8 +42,12 @@ func Chop(str string, step int) (string) {
 
   step = math.Floor(step)
 	if step > 0 {
-		re := regex.MustCompile(".{1," + step + "}")
-  	return re.match(str)
+		var buffer bytes.Buffer
+		buffer.WriteString(".{1,")
+		buffer.WriteString(step)
+		buffer.WriteString("}")
+		re := regexp.MustCompile(buffer.String())
+  	return re.FindStringSubmatch(str)
 	} else {
 		a := []string{str}
 		return a
@@ -51,24 +55,24 @@ func Chop(str string, step int) (string) {
 }
 
 func Classify(str string) (string) {
-  re := regex.MustCompile("[\\W_]")
-  strWithSpaces := re.replaceAllString(str, " ")
-  re = regex.MustCompile("\\s")
-  strNoSpaces := re.replaceAllString(strWithSpaces, "")
+  re := regexp.MustCompile("[\\W_]")
+  strWithSpaces := re.ReplaceAllString(str, " ")
+  re = regexp.MustCompile("\\s")
+  strNoSpaces := re.ReplaceAllString(strWithSpaces, "")
   return Capitalize(Camelize(strNoSpaces))
 };
 
 func Clean(str string) (string) {
-  str = strings.Trim(str)
-
+  str = strings.TrimSpace(str)
+	re := regexp.MustCompile("\\s\\s+")
   return re.ReplaceAllString(str, " ")
 }
 
 func Dasherize(str string) (string) {
-  str = strings.Trim(str)
-	re := regex.MustCompile("([A-Z])")
+  str = strings.TrimSpace(str)
+	re := regexp.MustCompile("([A-Z])")
 	str = re.ReplaceAllString(str, "-$1")
-	re = regex.MustCompile("[-_\\s]+")
+	re = regexp.MustCompile("[-_\\s]+")
 	str = re.ReplaceAllString(str, "-")
   return strings.ToLower(str)
 }
@@ -77,27 +81,27 @@ func Decapitalize(str string) (string) {
   return strings.ToLower(str[0]) + str[1:]
 }
 
-func EndsWith(str string, ends, position int) (string) {
-  strEnds := "" + ends
+func EndsWith(str, ends string, position int) (string) {
+  ends = "" + ends
   if position == -1 {
-    newPosition := len(str) - len(strEnds)
+    position = len(str) - len(ends)
   } else {
-    newPosition := math.Min(toPositive(position), len(str) - len(strEnds))
+    position = math.Min(toPositive(position), len(str) - len(ends))
   }
-  return newPosition >= 0 && str.indexOf(strEnds, newPosition) == newPosition
+  return position >= 0 && str.indexOf(ends, position) == position
 }
 
 func Humanize(str string) (string) {
 	str = Underscored(str)
-	re := regex.MustCompile("_id$")
+	re := regexp.MustCompile("_id$")
 	str = re.ReplaceAllString(str, "")
-	re = regex.MustCompile("_")
+	re = regexp.MustCompile("_")
 	str = re.ReplaceAllString(str, " ")
   return Capitalize(strings.Trim(str))
 }
 
 func IsBlank(str string) {
-	re := regex.MustCompile("^\\s*$")
+	re := regexp.MustCompile("^\\s*$")
   return re.MatchString(str)
 }
 
@@ -164,7 +168,7 @@ func Lines(str string) {
 		var a []string
 		return a
 	}
-	re := regex.MustCompile("\\r\\n?|\\n")
+	re := regexp.MustCompile("\\r\\n?|\\n")
   return re.Split(str)
 }
 
@@ -192,10 +196,10 @@ func Prune(str string, length int, pruneStr string) (string) {
 		}
   }
 
-	re := regex.MustCompile("/.(?=\\W*\\w*$)")
+	re := regexp.MustCompile("/.(?=\\W*\\w*$)")
   template := re.ReplaceAllStringFunc(str[0: length + 1], tmpl) // 'Hello, world' -> 'HellAA AAAAA'
 
-	re = regex.MustCompile("\\w\\w")
+	re = regexp.MustCompile("\\w\\w")
   if re.MatchString(template[len(template) - 2:]) {
     template = template.ReplaceAllString("\\s*\\S+$", "")
   } else {
@@ -218,8 +222,8 @@ func Repeat(str string, qty int, separator string) (string) {
   }
 
 	var repeat []string
-  for qty > 0; repeat[qty] = str {
-
+  for qty > 0  {
+		repeat[qty] = str
 	}
   return strings.Join(repeat, separator)
 }
@@ -229,7 +233,7 @@ func Reverse(str string) (string) {
 }
 
 func Slugify(str string) (string) {
-	re := regex.MustCompile("[^\\w\\s-]")
+	re := regexp.MustCompile("[^\\w\\s-]")
 	str = re.ReplaceAllString(str, "-")
 	str = strings.ToLower(str)
 	str = CleanDiacritics(str)
@@ -257,7 +261,7 @@ func Succ(str string) (string) {
 }
 
 func SwapCase(str string) (string) {
-  re := regex.MustCompile("\\S")
+  re := regexp.MustCompile("\\S")
   return re.ReplaceAllStringFunc(str, func(c string) string {
 		if c == strings.ToUpper(c) {
     	return strings.ToLower(c)
@@ -269,7 +273,7 @@ func SwapCase(str string) (string) {
 
 func Titleize(str string) (string) {
 	str = strings.ToLower(str)
-	re := regex.MustCompile("(?:^|\\s|-)\\S")
+	re := regexp.MustCompile("(?:^|\\s|-)\\S")
   return re.ReplaceAllStringFunc(lowerStr, func(c string) string {
     return strings.ToUpper(c)
   })
@@ -287,9 +291,9 @@ func Truncate(str string, length int, truncateStr string) (string) {
 
 func Underscored(str string) (string) {
 	str = strings.Trim(str)
-	re := regex.MustCompile("([a-z\\d])([A-Z]+)")
+	re := regexp.MustCompile("([a-z\\d])([A-Z]+)")
 	str = re.ReplaceAllString(str, "$1_$2")
-	re = regex.MustCompile("[-\\s]+")
+	re = regexp.MustCompile("[-\\s]+")
 	str = re.ReplaceAllString(str, "_")
   return strings.ToLower(str)
 }
@@ -308,6 +312,6 @@ func Words(str, delimiter string) {
 		var a []string
 		return a
 	}
-	re := regex.MustCompile(delimiter || "\\s+")
+	re := regexp.MustCompile(delimiter || "\\s+")
   return re.Split(strings.Trim(str, delimiter), -1)
 }
