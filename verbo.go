@@ -57,10 +57,10 @@ func Chop(str string, step int) ([]string) {
 
 func Classify(str string) (string) {
   re := regexp.MustCompile("[\\W_]")
-  strWithSpaces := re.ReplaceAllString(str, " ")
+  str = re.ReplaceAllString(str, " ")
   re = regexp.MustCompile("\\s")
-  strNoSpaces := re.ReplaceAllString(strWithSpaces, "")
-  return Capitalize(Camelize(strNoSpaces, false), false)
+  str = re.ReplaceAllString(str, "")
+  return Capitalize(Camelize(str, false), false)
 };
 
 func Clean(str string) (string) {
@@ -79,12 +79,13 @@ func CleanDiacritics(str string) (string) {
 
 	re := regexp.MustCompile(".{1}")
 	return re.ReplaceAllStringFunc(str, func(c string) string {
-		index := strings.Index(from, c);
+		index := strings.Index(from, c)
 		if index == -1 {
     	return c
 		} else {
 			return string(to[index])
 		}
+		return ""
   })
 }
 
@@ -99,16 +100,6 @@ func Dasherize(str string) (string) {
 
 func Decapitalize(str string) (string) {
   return strings.ToLower(string(str[0])) + str[1:]
-}
-
-func EndsWith(str, ends string, position int) (bool) {
-  ends = "" + ends
-  if position == -1 {
-    position = len(str) - len(ends)
-  } else {
-    position = int(math.Min(float64(toPositive(position)), float64(len(str) - len(ends))))
-  }
-  return position >= 0 && strings.IndexByte(ends, byte(position)) == position
 }
 
 func Humanize(str string) (string) {
@@ -218,7 +209,7 @@ func Prune(str string, length int, pruneStr string) (string) {
 		}
   }
 
-	re := regexp.MustCompile("/.(?=\\W*\\w*$)")
+	re := regexp.MustCompile(".(?=\\W*\\w*$)")
   template := re.ReplaceAllStringFunc(str[0: length + 1], tmpl) // 'Hello, world' -> 'HellAA AAAAA'
 
 	re = regexp.MustCompile("\\w\\w")
@@ -274,16 +265,6 @@ func Splice(str string, i, howmany int, substr string) (string) {
   arr := chars(str)
   arr.splice(^i, ^howmany, substr);
   return strings.Join(arr, "")
-}
-
-func StartsWith(str string, starts, position int) (bool) {
-  starts = "" + starts
-	if position == "" {
-  	position = 0
-	} else {
-		position = int(math.Min(float64(toPositive(position)), float64(len(str))))
-	}
-  return strings.LastIndexByte(str, byte(position)) == position
 }
 */
 
