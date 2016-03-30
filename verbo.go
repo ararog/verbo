@@ -5,20 +5,24 @@ import (
   "regexp"
   "math"
 	"bytes"
+	"unicode"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 func Camelize(str string, decapitalize bool) (string) {
   str = strings.TrimSpace(str)
-  re := regexp.MustCompile("[-_\\s]+(.)?")
+  re := regexp.MustCompile(`[-_\s]+(.)?`)
   str = re.ReplaceAllStringFunc(str, func(c string) string {
 		if c != "" {
-    	return strings.ToUpper(c)
+			out := re.FindStringSubmatch(c)
+    	return strings.ToUpper(out[1])
 		} else {
 			return ""
 		}
   })
 
-  if decapitalize == true {
+  if decapitalize {
     return Decapitalize(str)
   } else {
     return str
@@ -41,7 +45,7 @@ func Chop(str string, step int) ([]string) {
 		return a
 	}
 
-  step = ^step
+  step = int(math.Floor(float64(step)))
 	if step > 0 {
 		var buffer bytes.Buffer
 		buffer.WriteString(".{1,")
@@ -56,44 +60,31 @@ func Chop(str string, step int) ([]string) {
 }
 
 func Classify(str string) (string) {
-  re := regexp.MustCompile("[\\W_]")
+  re := regexp.MustCompile(`[\W_]`)
   str = re.ReplaceAllString(str, " ")
-  re = regexp.MustCompile("\\s")
-  str = re.ReplaceAllString(str, "")
   return Capitalize(Camelize(str, false), false)
 };
 
 func Clean(str string) (string) {
   str = strings.TrimSpace(str)
-	re := regexp.MustCompile("\\s\\s+")
+	re := regexp.MustCompile(`\s\s+`)
   return re.ReplaceAllString(str, " ")
 }
 
 func CleanDiacritics(str string) (string) {
-
-	from := "ąàáäâãåæăćčĉęèéëêĝĥìíïîĵłľńňòóöőôõðøśșşšŝťțţŭùúüűûñÿýçżźž"
-	to := "aaaaaaaaaccceeeeeghiiiijllnnoooooooossssstttuuuuuunyyczzz"
-
-	from += strings.ToUpper(from)
-	to += strings.ToUpper(to)
-
-	re := regexp.MustCompile(".{1}")
-	return re.ReplaceAllStringFunc(str, func(c string) string {
-		index := strings.Index(from, c)
-		if index == -1 {
-    	return c
-		} else {
-			return string(to[index])
-		}
-		return ""
-  })
+	isMn := func(r rune) bool {
+	    return unicode.Is(unicode.Mn, r) // Mn: nonspacing marks
+	}
+	t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
+	result, _, _ := transform.String(t, str)
+	return result
 }
 
 func Dasherize(str string) (string) {
   str = strings.TrimSpace(str)
 	re := regexp.MustCompile("([A-Z])")
 	str = re.ReplaceAllString(str, "-$1")
-	re = regexp.MustCompile("[-_\\s]+")
+	re = regexp.MustCompile(`[-_\s]+`)
 	str = re.ReplaceAllString(str, "-")
   return strings.ToLower(str)
 }
@@ -112,7 +103,7 @@ func Humanize(str string) (string) {
 }
 
 func IsBlank(str string) (bool) {
-	re := regexp.MustCompile("^\\s*$")
+	re := regexp.MustCompile(`^\s*$`)
   return re.MatchString(str)
 }
 
@@ -181,7 +172,7 @@ func Lines(str string) ([]string) {
 		var a []string
 		return a
 	}
-	re := regexp.MustCompile("\\r\\n?|\\n")
+	re := regexp.MustCompile(`\r\n?|\n`)
   return re.Split(str, -1)
 }
 
@@ -190,7 +181,7 @@ func Pred(str string) (string) {
 }
 
 func Prune(str string, length int, pruneStr string) (string) {
-  length = ^length
+  length = int(math.Floor(float64(length)))
 	if pruneStr != "" {
   	pruneStr = pruneStr
 	} else {
@@ -209,12 +200,12 @@ func Prune(str string, length int, pruneStr string) (string) {
 		}
   }
 
-	re := regexp.MustCompile(".(?=\\W*\\w*$)")
+	re := regexp.MustCompile(`.(?=\W*\w*$)`)
   template := re.ReplaceAllStringFunc(str[0: length + 1], tmpl) // 'Hello, world' -> 'HellAA AAAAA'
 
-	re = regexp.MustCompile("\\w\\w")
+	re = regexp.MustCompile(`\w\w`)
   if re.MatchString(template[len(template) - 2:]) {
-		re = regexp.MustCompile("\\s*\\S+$")
+		re = regexp.MustCompile(`\s*\S+$`)
     template = re.ReplaceAllString(template, "")
   } else {
     template = strings.TrimRight(template[0 : len(template) - 1], " ")
@@ -228,7 +219,7 @@ func Prune(str string, length int, pruneStr string) (string) {
 }
 
 func Repeat(str string, qty int, separator string) (string) {
-  qty = ^qty
+  qty = int(math.Floor(float64(qty)))
 
   // using faster implementation if separator is not needed;
   if separator == "" {
@@ -253,7 +244,7 @@ func Reverse(str string) (string) {
 }
 
 func Slugify(str string) (string) {
-	re := regexp.MustCompile("[^\\w\\s-]")
+	re := regexp.MustCompile(`[^\w\s-]`)
 	str = re.ReplaceAllString(str, "-")
 	str = strings.ToLower(str)
 	str = CleanDiacritics(str)
@@ -295,9 +286,9 @@ func Truncate(str string, length int, truncateStr string) (string) {
 	if truncateStr == "" {
   	truncateStr = "..."
 	}
-  length = ^length
+  length = int(math.Floor(float64(length)))
 	if len(str) > length {
-  	return str[0 : length] + truncateStr
+  	return str[0:length] + truncateStr
 	} else {
 		return str
 	}
@@ -305,9 +296,9 @@ func Truncate(str string, length int, truncateStr string) (string) {
 
 func Underscored(str string) (string) {
 	str = strings.TrimSpace(str)
-	re := regexp.MustCompile("([a-z\\d])([A-Z]+)")
-	str = re.ReplaceAllString(str, "$1_$2")
-	re = regexp.MustCompile("[-\\s]+")
+	re := regexp.MustCompile(`([a-z\d])([A-Z]+)`)
+	str = re.ReplaceAllString(str, `$1_$2`)
+	re = regexp.MustCompile(`[-\s]+`)
 	str = re.ReplaceAllString(str, "_")
   return strings.ToLower(str)
 }
@@ -330,7 +321,7 @@ func Words(str, delimiter string) ([]string) {
 		return a
 	}
 	if delimiter == "" {
-		delimiter = "\\s+"
+		delimiter = `\s+`
 	}
 	re := regexp.MustCompile(delimiter)
   return re.Split(strings.Trim(str, delimiter), -1)
