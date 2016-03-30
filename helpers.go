@@ -4,7 +4,7 @@ func adjacent(str string, direction int) (string) {
   if len(str) == 0 {
     return ""
   }
-  return str[0:-1] + String.fromCharCode(str.charCodeAt(len(str) - 1) + direction)
+  return str[0:1] + string(int(str[len(str) - 1]) + direction)
 }
 
 func strRepeat(str string, qty int) (string) {
@@ -13,7 +13,7 @@ func strRepeat(str string, qty int) (string) {
   }
   result := ""
   for qty > 0 {
-    if qty & 1 {
+    if qty & 1 == 0 {
       result += str
     }
     qty >>= 1
@@ -26,6 +26,6 @@ func toPositive(number int) (int) {
   if number < 0 {
     return  0
   } else {
-    return (+number || 0)
+    return +number
   }
 }

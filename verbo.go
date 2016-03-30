@@ -4,6 +4,7 @@ import (
 	"strings"
   "regexp"
   "math"
+	"bytes"
 )
 
 func Camelize(str string, decapitalize bool) (string) {
@@ -25,13 +26,13 @@ func Camelize(str string, decapitalize bool) (string) {
 }
 
 func Capitalize(str string, lowercaseRest bool) (string) {
-	var remainingChars string
+	remainingChars := ""
 	if !lowercaseRest {
-  	remainingChars := str[1:]
+  	remainingChars = str[1:]
 	} else {
-		remainingChars := strings.ToLower(str[1:])
+		remainingChars = strings.ToLower(str[1:])
 	}
-  return strings.ToUpper(str[0]) + remainingChars
+  return strings.ToUpper(string(str[0])) + remainingChars
 };
 
 func Chop(str string, step int) ([]string) {
@@ -40,11 +41,11 @@ func Chop(str string, step int) ([]string) {
 		return a
 	}
 
-  step = math.Floor(step)
+  step = ^step
 	if step > 0 {
 		var buffer bytes.Buffer
 		buffer.WriteString(".{1,")
-		buffer.WriteString(step)
+		buffer.WriteString(string(step))
 		buffer.WriteString("}")
 		re := regexp.MustCompile(buffer.String())
   	return re.FindStringSubmatch(str)
@@ -59,13 +60,32 @@ func Classify(str string) (string) {
   strWithSpaces := re.ReplaceAllString(str, " ")
   re = regexp.MustCompile("\\s")
   strNoSpaces := re.ReplaceAllString(strWithSpaces, "")
-  return Capitalize(Camelize(strNoSpaces))
+  return Capitalize(Camelize(strNoSpaces, false), false)
 };
 
 func Clean(str string) (string) {
   str = strings.TrimSpace(str)
 	re := regexp.MustCompile("\\s\\s+")
   return re.ReplaceAllString(str, " ")
+}
+
+func CleanDiacritics(str string) (string) {
+
+	from := "ąàáäâãåæăćčĉęèéëêĝĥìíïîĵłľńňòóöőôõðøśșşšŝťțţŭùúüűûñÿýçżźž"
+	to := "aaaaaaaaaccceeeeeghiiiijllnnoooooooossssstttuuuuuunyyczzz"
+
+	from += strings.ToUpper(from)
+	to += strings.ToUpper(to)
+
+	re := regexp.MustCompile(".{1}")
+	return re.ReplaceAllStringFunc(str, func(c string) string {
+		index := strings.Index(from, c);
+		if index == -1 {
+    	return c
+		} else {
+			return string(to[index])
+		}
+  })
 }
 
 func Dasherize(str string) (string) {
@@ -78,17 +98,17 @@ func Dasherize(str string) (string) {
 }
 
 func Decapitalize(str string) (string) {
-  return strings.ToLower(str[0]) + str[1:]
+  return strings.ToLower(string(str[0])) + str[1:]
 }
 
-func EndsWith(str, ends string, position int) (string) {
+func EndsWith(str, ends string, position int) (bool) {
   ends = "" + ends
   if position == -1 {
     position = len(str) - len(ends)
   } else {
-    position = math.Min(toPositive(position), len(str) - len(ends))
+    position = int(math.Min(float64(toPositive(position)), float64(len(str) - len(ends))))
   }
-  return position >= 0 && str.indexOf(ends, position) == position
+  return position >= 0 && strings.IndexByte(ends, byte(position)) == position
 }
 
 func Humanize(str string) (string) {
@@ -97,38 +117,40 @@ func Humanize(str string) (string) {
 	str = re.ReplaceAllString(str, "")
 	re = regexp.MustCompile("_")
 	str = re.ReplaceAllString(str, " ")
-  return Capitalize(strings.Trim(str))
+  return Capitalize(strings.TrimSpace(str), false)
 }
 
-func IsBlank(str string) {
+func IsBlank(str string) (bool) {
 	re := regexp.MustCompile("^\\s*$")
   return re.MatchString(str)
 }
 
-func Levenshtein(str1, str2 string) {
+func Levenshtein(str1, str2 string) (float64) {
 
   // Short cut cases
   if str1 == str2 {
 		return 0
 	}
-  if !str1 || !str2 {
-		return math.Max(len(str1), len(str2))
+  if str1 == "" || str2 == "" {
+		return math.Max(float64(len(str1)), float64(len(str2)))
 	}
 
   // two rows
 	size := len(str2) + 1
-  var prevRow [size]int
+  prevRow := make([]int, size, size)
 
   // initialise previous row
   for i := 0; i < len(prevRow); i+=1 {
     prevRow[i] = i
   }
 
+	nextCol := 0;
   // calculate current row distance from previous row
   for i := 0; i < len(str1); i+=1 {
-    nextCol := i + 1
-
-    for j := 0; j < len(str2); j+=1 {
+    nextCol = i + 1
+		j := 0
+    for j < len(str2) {
+			j+=1
       curCol := nextCol
 
       // substution
@@ -160,16 +182,16 @@ func Levenshtein(str1, str2 string) {
     prevRow[j] = nextCol
   }
 
-  return nextCol
+  return float64(nextCol)
 }
 
-func Lines(str string) {
+func Lines(str string) ([]string) {
   if str == "" {
 		var a []string
 		return a
 	}
 	re := regexp.MustCompile("\\r\\n?|\\n")
-  return re.Split(str)
+  return re.Split(str, -1)
 }
 
 func Pred(str string) (string) {
@@ -177,7 +199,7 @@ func Pred(str string) (string) {
 }
 
 func Prune(str string, length int, pruneStr string) (string) {
-  length = math.Floor(length)
+  length = ^length
 	if pruneStr != "" {
   	pruneStr = pruneStr
 	} else {
@@ -201,9 +223,10 @@ func Prune(str string, length int, pruneStr string) (string) {
 
 	re = regexp.MustCompile("\\w\\w")
   if re.MatchString(template[len(template) - 2:]) {
-    template = template.ReplaceAllString("\\s*\\S+$", "")
+		re = regexp.MustCompile("\\s*\\S+$")
+    template = re.ReplaceAllString(template, "")
   } else {
-    template = strings.Rtrim(template[0 : len(template) - 1])
+    template = strings.TrimRight(template[0 : len(template) - 1], " ")
   }
 
 	if len(template + pruneStr) > len(str) {
@@ -214,7 +237,7 @@ func Prune(str string, length int, pruneStr string) (string) {
 }
 
 func Repeat(str string, qty int, separator string) (string) {
-  qty = math.Floor(qty)
+  qty = ^qty
 
   // using faster implementation if separator is not needed;
   if separator == "" {
@@ -229,7 +252,13 @@ func Repeat(str string, qty int, separator string) (string) {
 }
 
 func Reverse(str string) (string) {
-  return strings.Join(chars(str).reverse(), "")
+	n := len(str)
+	runes := make([]rune, n)
+	for _, rune := range str {
+			n--
+			runes[n] = rune
+	}
+	return string(runes[n:])
 }
 
 func Slugify(str string) (string) {
@@ -240,7 +269,8 @@ func Slugify(str string) (string) {
   return strings.Trim(Dasherize(str), "-")
 }
 
-func Splice(str string, i, howmany int, substr string) {
+/*
+func Splice(str string, i, howmany int, substr string) (string) {
   arr := chars(str)
   arr.splice(^i, ^howmany, substr);
   return strings.Join(arr, "")
@@ -251,10 +281,11 @@ func StartsWith(str string, starts, position int) (bool) {
 	if position == "" {
   	position = 0
 	} else {
-		position = math.Min(toPositive(position), len(str))
+		position = int(math.Min(float64(toPositive(position)), float64(len(str))))
 	}
-  return str.lastIndexOf(starts, position) == position
+  return strings.LastIndexByte(str, byte(position)) == position
 }
+*/
 
 func Succ(str string) (string) {
  return adjacent(str, 1)
@@ -274,14 +305,16 @@ func SwapCase(str string) (string) {
 func Titleize(str string) (string) {
 	str = strings.ToLower(str)
 	re := regexp.MustCompile("(?:^|\\s|-)\\S")
-  return re.ReplaceAllStringFunc(lowerStr, func(c string) string {
+  return re.ReplaceAllStringFunc(str, func(c string) string {
     return strings.ToUpper(c)
   })
 }
 
 func Truncate(str string, length int, truncateStr string) (string) {
-  truncateStr = truncateStr || "..."
-  length = math.Floor(length)
+	if truncateStr == "" {
+  	truncateStr = "..."
+	}
+  length = ^length
 	if len(str) > length {
   	return str[0 : length] + truncateStr
 	} else {
@@ -290,7 +323,7 @@ func Truncate(str string, length int, truncateStr string) (string) {
 }
 
 func Underscored(str string) (string) {
-	str = strings.Trim(str)
+	str = strings.TrimSpace(str)
 	re := regexp.MustCompile("([a-z\\d])([A-Z]+)")
 	str = re.ReplaceAllString(str, "$1_$2")
 	re = regexp.MustCompile("[-\\s]+")
@@ -299,19 +332,25 @@ func Underscored(str string) (string) {
 }
 
 func Unquote(str, quoteChar string) (string) {
-  quoteChar = quoteChar || "\"";
-  if str[0] == quoteChar && str[len(str) - 1] == quoteChar {
+	if quoteChar == "" {
+  	quoteChar = "\"";
+	}
+  if string(str[0]) == quoteChar &&
+		string(str[len(str)-1]) == quoteChar {
     return str[1 : len(str) - 1]
 	} else {
 		return str
 	}
 }
 
-func Words(str, delimiter string) {
+func Words(str, delimiter string) ([]string) {
   if IsBlank(str) {
 		var a []string
 		return a
 	}
-	re := regexp.MustCompile(delimiter || "\\s+")
+	if delimiter == "" {
+		delimiter = "\\s+"
+	}
+	re := regexp.MustCompile(delimiter)
   return re.Split(strings.Trim(str, delimiter), -1)
 }
