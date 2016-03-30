@@ -2,7 +2,7 @@ package verbo
 
 import (
 	"testing"
-	//"strings"
+	"strings"
 )
 
 func equal(t *testing.T, src, dest string) {
