@@ -16,3 +16,15 @@ import (
 str := verbo.LeftPad("1", 8, "0")
 fmt.Printf("Output: %s\n", str)
 ```
+
+## Contributing
+
+You can contribute by creating new testcases and fixing code of tests that are
+currently failing, the functions Chop, Humanize, Levenstein, Pad, Slugify,
+Underscored and Words are not fully functional and requires some additional fixes.
+
+Feel free to fork and create a PR!
+
+## Questions
+
+Feel free to ask questions on stackoverflow using tag "verbo".

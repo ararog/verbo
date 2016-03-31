@@ -165,10 +165,9 @@ func Levenshtein(str1, str2 string) int {
 			prevRow[j] = curCol
 			j += 1
 		}
-		i += 1
-
 		// copy last col value into previous (in preparation for next iteration)
 		prevRow[j] = nextCol
+		i += 1
 	}
 
 	return nextCol
