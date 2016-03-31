@@ -95,6 +95,21 @@ func TestHumanize(t *testing.T) {
 	equal(t, Humanize("   capitalize dash-CamelCase_underscore trim  "), "Capitalize dash camel case underscore trim")
 }
 
+func TestLeftPad(t *testing.T) {
+	equal(t, LeftPad("1", 8, ""), "       1")
+	equal(t, LeftPad("1", 8, "0"), "00000001")
+}
+
+func TestPad(t *testing.T) {
+	equal(t, Pad("1", 8, "", "left"), "       1")
+	equal(t, Pad("1", 8, "0", "left"), "00000001")
+	equal(t, Pad("1", 8, "0", "left"), "00000001")
+	equal(t, Pad("1", 8, "0", "right"), "10000000")
+	equal(t, Pad("1", 8, "0", "both"), "00001000")
+	equal(t, Pad("foo", 8, "0", "both"), "000foo00")
+	equal(t, Pad("foo", 7, "0", "both"), "00foo00")
+}
+
 func TestPred(t *testing.T) {
 	equal(t, Pred("b"), "a")
 	equal(t, Pred("B"), "A")
@@ -122,6 +137,13 @@ func TestPrune(t *testing.T) {
 func TestRepeat(t *testing.T) {
 	equal(t, Repeat("foo", 0, ""), "")
 	equal(t, Repeat("foo", 3, ""), "foofoofoo")
+}
+
+func TestRightPad(t *testing.T) {
+	equal(t, RightPad("1", 8, ""), "1       ")
+	equal(t, RightPad("1", 8, "0"), "10000000")
+	equal(t, RightPad("foo", 8, "0"), "foo00000")
+	equal(t, RightPad("foo", 7, "0"), "foo0000")
 }
 
 func TestSlugify(t *testing.T) {

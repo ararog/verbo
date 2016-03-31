@@ -107,6 +107,10 @@ func IsBlank(str string) bool {
 	return re.MatchString(str)
 }
 
+func LeftPad(str string, length int, padStr string) string {
+  return Pad(str, length, padStr, "")
+}
+
 func Levenshtein(str1, str2 string) float64 {
 
 	// Short cut cases
@@ -176,6 +180,30 @@ func Lines(str string) []string {
 	return re.Split(str, -1)
 }
 
+func Pad(str string, length int, padStr, padtype string) string {
+  length = int(math.Floor(float64(length)))
+
+  var padlen = 0
+
+  if padStr == "" {
+    padStr = " "
+  } else if len(padStr) > 1 {
+    padStr = string(padStr[0])
+	}
+
+  switch padtype {
+  case "right":
+    padlen = length - len(str)
+    return str + strRepeat(padStr, padlen)
+  case "both":
+    padlen = length - len(str)
+    return strRepeat(padStr, int(math.Ceil(float64(padlen / 2)))) + str + strRepeat(padStr, int(math.Floor(float64(padlen / 2))))
+  default: // 'left'
+    padlen = length - len(str)
+    return strRepeat(padStr, padlen) + str
+  }
+}
+
 func Pred(str string) string {
 	return adjacent(str, -1)
 }
@@ -241,6 +269,10 @@ func Reverse(str string) string {
 		runes[n] = rune
 	}
 	return string(runes[n:])
+}
+
+func RightPad(str string, length int, padStr string) string {
+  return Pad(str, length, padStr, "right");
 }
 
 func Slugify(str string) string {
