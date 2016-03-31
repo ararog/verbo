@@ -10,6 +10,18 @@ func equal(t *testing.T, src, dest string) {
 	}
 }
 
+func equalInt(t *testing.T, src, dest int) {
+	if src != dest {
+		t.Errorf("Wrong result: %d should be: %d", src, dest)
+	}
+}
+
+func equalArray(t *testing.T, src, dest []string) {
+	if len(src) != len(dest) {
+		t.Errorf("Wrong result: %q should be: %q", src, dest)
+	}
+}
+
 func TestIsBlank(t *testing.T) {
 	if !IsBlank(" ") {
 		t.Errorf("Wrong result: %s", "should not go here")
@@ -42,6 +54,11 @@ func TestCapitalize(t *testing.T) {
 	equal(t, Capitalize("f", false), "F")
 	equal(t, Capitalize("f", true), "F")
 	equal(t, Capitalize("f", false), "F")
+}
+
+func TestChop(t *testing.T) {
+	equalInt(t, len(Chop("whitespace", 2)), 5)
+	equalInt(t, len(Chop("whitespace", 3)), 4)
 }
 
 func TestClassify(t *testing.T) {
@@ -100,6 +117,24 @@ func TestLeftPad(t *testing.T) {
 	equal(t, LeftPad("1", 8, "0"), "00000001")
 }
 
+func TestLevenstein(t *testing.T) {
+	equalInt(t, Levenshtein("Godfather", "Godfather"), 0)
+  equalInt(t, Levenshtein("Godfather", "Godfathe"), 1)
+  equalInt(t, Levenshtein("Godfather", "odfather"), 1)
+  equalInt(t, Levenshtein("Godfather", "godfather"), 1)
+  equalInt(t, Levenshtein("Godfather", "Gdfthr"), 3)
+  equalInt(t, Levenshtein("seven", "eight"), 5)
+}
+
+func TestLines(t *testing.T) {
+	equalInt(t, len(Lines("Hello\nWorld")), 2)
+  equalInt(t, len(Lines("Hello\rWorld")), 2)
+  equalInt(t, len(Lines("Hello World")), 1)
+  equalInt(t, len(Lines("\r\n\n\r")), 4)
+  equalInt(t, len(Lines("Hello\r\r\nWorld")), 3)
+  equalInt(t, len(Lines("Hello\r\rWorld")), 3)
+}
+
 func TestPad(t *testing.T) {
 	equal(t, Pad("1", 8, "", "left"), "       1")
 	equal(t, Pad("1", 8, "0", "left"), "00000001")
@@ -139,6 +174,13 @@ func TestRepeat(t *testing.T) {
 	equal(t, Repeat("foo", 3, ""), "foofoofoo")
 }
 
+func TestReverse(t *testing.T) {
+	equal(t, Reverse("foo"), "oof" )
+  equal(t, Reverse("foobar"), "raboof" )
+  equal(t, Reverse("foo bar"), "rab oof" )
+  equal(t, Reverse("saippuakauppias"), "saippuakauppias" )
+}
+
 func TestRightPad(t *testing.T) {
 	equal(t, RightPad("1", 8, ""), "1       ")
 	equal(t, RightPad("1", 8, "0"), "10000000")
@@ -155,6 +197,12 @@ func TestSlugify(t *testing.T) {
 	equal(t, Slugify("SOME Capital Letters"), "some-capital-letters")
 }
 
+func TestSucc(t *testing.T) {
+	equal(t, Succ("a"), "b")
+  equal(t, Succ("A"), "B")
+  equal(t, Succ("+"), ",")
+}
+
 func TestSwapCase(t *testing.T) {
 	equal(t, SwapCase("AaBbCcDdEe"), "aAbBcCdDeE")
 	equal(t, SwapCase("Hello World"), "hELLO wORLD")
@@ -165,4 +213,18 @@ func TestUnderscored(t *testing.T) {
 	equal(t, Underscored("theUnderscoredStringMethod"), "the_underscored_string_method")
 	equal(t, Underscored("TheUnderscoredStringMethod"), "the_underscored_string_method")
 	equal(t, Underscored(" the underscored  string method"), "the_underscored_string_method")
+}
+
+func TestUnquote(t *testing.T) {
+	equal(t, Unquote("\"foo\"", ""), "foo")
+  equal(t, Unquote("\"\"foo\"\"", ""), "\"foo\"")
+  equal(t, Unquote("\"1\"", ""), "1")
+  equal(t, Unquote("\"foo\"", "\""), "foo")
+}
+
+func TestWords(t *testing.T) {
+	equalArray(t, Words("I love you!", ""), []string{"I", "love", "you!"})
+	equalArray(t, Words(" I    love   you!  ", ""), []string{"I", "love", "you!"})
+	equalArray(t, Words("I_love_you!", "_"), []string{"I", "love", "you!"})
+	equalArray(t, Words("I-love-you!", "-"), []string{"I", "love", "you!"})
 }

@@ -95,9 +95,9 @@ func Decapitalize(str string) string {
 
 func Humanize(str string) string {
 	str = Underscored(str)
-	re := regexp.MustCompile("_id$")
+	re := regexp.MustCompile(`_id$`)
 	str = re.ReplaceAllString(str, "")
-	re = regexp.MustCompile("_")
+	re = regexp.MustCompile(`_`)
 	str = re.ReplaceAllString(str, " ")
 	return Capitalize(strings.TrimSpace(str), false)
 }
@@ -111,14 +111,14 @@ func LeftPad(str string, length int, padStr string) string {
   return Pad(str, length, padStr, "")
 }
 
-func Levenshtein(str1, str2 string) float64 {
+func Levenshtein(str1, str2 string) int {
 
 	// Short cut cases
 	if str1 == str2 {
 		return 0
 	}
 	if str1 == "" || str2 == "" {
-		return math.Max(float64(len(str1)), float64(len(str2)))
+		return int(math.Max(float64(len(str1)), float64(len(str2))))
 	}
 
 	// two rows
@@ -131,12 +131,13 @@ func Levenshtein(str1, str2 string) float64 {
 	}
 
 	nextCol := 0
+
 	// calculate current row distance from previous row
-	for i := 0; i < len(str1); i += 1 {
+	i := 0
+	for i < len(str1) {
 		nextCol = i + 1
 		j := 0
 		for j < len(str2) {
-			j += 1
 			curCol := nextCol
 
 			// substution
@@ -162,13 +163,15 @@ func Levenshtein(str1, str2 string) float64 {
 
 			// copy current col value into previous (in preparation for next iteration)
 			prevRow[j] = curCol
+			j += 1
 		}
+		i += 1
 
 		// copy last col value into previous (in preparation for next iteration)
 		prevRow[j] = nextCol
 	}
 
-	return float64(nextCol)
+	return nextCol
 }
 
 func Lines(str string) []string {
