@@ -11,9 +11,9 @@ func equal(t *testing.T, src, dest string) {
 }
 
 func TestIsBlank(t *testing.T) {
-  if ! IsBlank(" ") {
-    t.Errorf("Wrong result: %s", "should not go here")
-  }
+	if !IsBlank(" ") {
+		t.Errorf("Wrong result: %s", "should not go here")
+	}
 }
 
 func TestCamelize(t *testing.T) {
@@ -68,16 +68,16 @@ func TestClearDiacritics(t *testing.T) {
 
 func TestDasherize(t *testing.T) {
 	equal(t, Dasherize("the_dasherize_string_method"), "the-dasherize-string-method")
-  equal(t, Dasherize("TheDasherizeStringMethod"), "-the-dasherize-string-method")
-  equal(t, Dasherize("thisIsATest"), "this-is-a-test")
-  equal(t, Dasherize("this Is A Test"), "this-is-a-test")
-  equal(t, Dasherize("thisIsATest123"), "this-is-a-test123")
-  equal(t, Dasherize("123thisIsATest"), "123this-is-a-test")
-  equal(t, Dasherize("the dasherize string method"), "the-dasherize-string-method")
-  equal(t, Dasherize("the  dasherize string method  "), "the-dasherize-string-method")
-  equal(t, Dasherize("téléphone"), "téléphone")
-  equal(t, Dasherize("foo$bar"), "foo$bar")
-  equal(t, Dasherize("input with a-dash"), "input-with-a-dash")
+	equal(t, Dasherize("TheDasherizeStringMethod"), "-the-dasherize-string-method")
+	equal(t, Dasherize("thisIsATest"), "this-is-a-test")
+	equal(t, Dasherize("this Is A Test"), "this-is-a-test")
+	equal(t, Dasherize("thisIsATest123"), "this-is-a-test123")
+	equal(t, Dasherize("123thisIsATest"), "123this-is-a-test")
+	equal(t, Dasherize("the dasherize string method"), "the-dasherize-string-method")
+	equal(t, Dasherize("the  dasherize string method  "), "the-dasherize-string-method")
+	equal(t, Dasherize("téléphone"), "téléphone")
+	equal(t, Dasherize("foo$bar"), "foo$bar")
+	equal(t, Dasherize("input with a-dash"), "input-with-a-dash")
 }
 
 func TestDecapitalize(t *testing.T) {
@@ -121,21 +121,21 @@ func TestPrune(t *testing.T) {
 
 func TestRepeat(t *testing.T) {
 	equal(t, Repeat("foo", 0, ""), "")
-  equal(t, Repeat("foo", 3, ""), "foofoofoo")
+	equal(t, Repeat("foo", 3, ""), "foofoofoo")
 }
 
 func TestSlugify(t *testing.T) {
 	equal(t, Slugify("Jack & Jill like numbers 1,2,3 and 4 and silly characters ?%.$!/"), "jack-jill-like-numbers-1-2-3-and-4-and-silly-characters")
-  equal(t, Slugify("Un éléphant à l\"orée du bois"), "un-elephant-a-l-oree-du-bois")
-  equal(t, Slugify("I know latin characters: á í ó ú ç ã õ ñ ü ă ș ț"), "i-know-latin-characters-a-i-o-u-c-a-o-n-u-a-s-t")
-  equal(t, Slugify("I am a word too, even though I am but a single letter: i!"), "i-am-a-word-too-even-though-i-am-but-a-single-letter-i")
-  equal(t, Slugify("Some asian 天地人 characters"), "some-asian-characters")
-  equal(t, Slugify("SOME Capital Letters"), "some-capital-letters")
+	equal(t, Slugify("Un éléphant à l\"orée du bois"), "un-elephant-a-l-oree-du-bois")
+	equal(t, Slugify("I know latin characters: á í ó ú ç ã õ ñ ü ă ș ț"), "i-know-latin-characters-a-i-o-u-c-a-o-n-u-a-s-t")
+	equal(t, Slugify("I am a word too, even though I am but a single letter: i!"), "i-am-a-word-too-even-though-i-am-but-a-single-letter-i")
+	equal(t, Slugify("Some asian 天地人 characters"), "some-asian-characters")
+	equal(t, Slugify("SOME Capital Letters"), "some-capital-letters")
 }
 
 func TestSwapCase(t *testing.T) {
 	equal(t, SwapCase("AaBbCcDdEe"), "aAbBcCdDeE")
-  equal(t, SwapCase("Hello World"), "hELLO wORLD")
+	equal(t, SwapCase("Hello World"), "hELLO wORLD")
 }
 
 func TestUnderscored(t *testing.T) {
