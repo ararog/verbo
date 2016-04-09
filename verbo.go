@@ -1,13 +1,13 @@
 package verbo
 
 import (
-	"bytes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 	"math"
 	"regexp"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 func Camelize(str string, decapitalize bool) string {
@@ -47,11 +47,7 @@ func Chop(str string, step int) []string {
 
 	step = int(math.Floor(float64(step)))
 	if step > 0 {
-		var buffer bytes.Buffer
-		buffer.WriteString(".{1,")
-		buffer.WriteString(string(step))
-		buffer.WriteString("}")
-		re := regexp.MustCompile(buffer.String())
+		re := regexp.MustCompile(".{1," + string(step) + "}")
 		return re.FindStringSubmatch(str)
 	} else {
 		a := []string{str}
@@ -118,11 +114,11 @@ func Levenshtein(str1, str2 string) int {
 		return 0
 	}
 	if str1 == "" || str2 == "" {
-		return int(math.Max(float64(len(str1)), float64(len(str2))))
+		return int(math.Max(float64(utf8.RuneCountInString(str1)), float64(utf8.RuneCountInString(str2))))
 	}
 
 	// two rows
-	size := len(str2) + 1
+	size := utf8.RuneCountInString(str2) + 1
 	prevRow := make([]int, size, size)
 
 	// initialise previous row
@@ -134,10 +130,10 @@ func Levenshtein(str1, str2 string) int {
 
 	// calculate current row distance from previous row
 	i := 0
-	for i < len(str1) {
+	for i < utf8.RuneCountInString(str1) {
 		nextCol = i + 1
 		j := 0
-		for j < len(str2) {
+		for j < utf8.RuneCountInString(str2) {
 			curCol := nextCol
 
 			// substution
@@ -189,19 +185,19 @@ func Pad(str string, length int, padStr, padtype string) string {
 
   if padStr == "" {
     padStr = " "
-  } else if len(padStr) > 1 {
+  } else if utf8.RuneCountInString(padStr) > 1 {
     padStr = string(padStr[0])
 	}
 
   switch padtype {
   case "right":
-    padlen = length - len(str)
+    padlen = length - utf8.RuneCountInString(str)
     return str + strRepeat(padStr, padlen)
   case "both":
-    padlen = length - len(str)
-    return strRepeat(padStr, int(math.Ceil(float64(padlen / 2)))) + str + strRepeat(padStr, int(math.Floor(float64(padlen / 2))))
+    padlen = length - utf8.RuneCountInString(str)
+    return strRepeat(padStr, int(math.Ceil(float64(padlen) / 2))) + str + strRepeat(padStr, int(math.Floor(float64(padlen) / 2)))
   default: // 'left'
-    padlen = length - len(str)
+    padlen = length - utf8.RuneCountInString(str)
     return strRepeat(padStr, padlen) + str
   }
 }
@@ -218,7 +214,7 @@ func Prune(str string, length int, pruneStr string) string {
 		pruneStr = "..."
 	}
 
-	if len(str) <= length {
+	if utf8.RuneCountInString(str) <= length {
 		return str
 	}
 
@@ -241,10 +237,10 @@ func Prune(str string, length int, pruneStr string) string {
 		template = strings.TrimRight(template[0:len(template)-1], " ")
 	}
 
-	if len(template+pruneStr) > len(str) {
+	if utf8.RuneCountInString(template+pruneStr) > utf8.RuneCountInString(str) {
 		return str
 	} else {
-		return str[0:len(template)] + pruneStr
+		return str[0:utf8.RuneCountInString(template)] + pruneStr
 	}
 }
 
@@ -264,7 +260,7 @@ func Repeat(str string, qty int, separator string) string {
 }
 
 func Reverse(str string) string {
-	n := len(str)
+	n := utf8.RuneCountInString(str)
 	runes := make([]rune, n)
 	for _, rune := range str {
 		n--
@@ -316,12 +312,22 @@ func Titleize(str string) string {
 	})
 }
 
+func Trim(str, characters string) string {
+  if characters == "" {
+		return strings.TrimSpace(str)
+	}
+
+	characters = defaultToWhiteSpace(characters)
+	re := regexp.MustCompile("^" + characters + "+|" + characters + "+$")
+	return re.ReplaceAllString(str, "")
+}
+
 func Truncate(str string, length int, truncateStr string) string {
 	if truncateStr == "" {
 		truncateStr = "..."
 	}
 	length = int(math.Floor(float64(length)))
-	if len(str) > length {
+	if utf8.RuneCountInString(str) > length {
 		return str[0:length] + truncateStr
 	} else {
 		return str
@@ -331,7 +337,7 @@ func Truncate(str string, length int, truncateStr string) string {
 func Underscored(str string) string {
 	str = strings.TrimSpace(str)
 	re := regexp.MustCompile(`([a-z\d])([A-Z]+)`)
-	str = re.ReplaceAllString(str, `$1_$2`)
+	str = re.ReplaceAllString(str, `$1-$2`)
 	re = regexp.MustCompile(`[-\s]+`)
 	str = re.ReplaceAllString(str, "_")
 	return strings.ToLower(str)
@@ -342,8 +348,8 @@ func Unquote(str, quoteChar string) string {
 		quoteChar = "\""
 	}
 	if string(str[0]) == quoteChar &&
-		string(str[len(str)-1]) == quoteChar {
-		return str[1 : len(str)-1]
+		string(str[utf8.RuneCountInString(str)-1]) == quoteChar {
+		return str[1 : utf8.RuneCountInString(str)-1]
 	} else {
 		return str
 	}
@@ -358,5 +364,5 @@ func Words(str, delimiter string) []string {
 		delimiter = `\s+`
 	}
 	re := regexp.MustCompile(delimiter)
-	return re.Split(strings.Trim(str, delimiter), -1)
+	return re.Split(Trim(str, delimiter), -1)
 }
