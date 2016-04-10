@@ -6,6 +6,7 @@ import (
 	"math"
 	"regexp"
 	"strings"
+	"strconv"
 	"unicode"
 	"unicode/utf8"
 )
@@ -47,8 +48,8 @@ func Chop(str string, step int) []string {
 
 	step = int(math.Floor(float64(step)))
 	if step > 0 {
-		re := regexp.MustCompile(".{1," + string(step) + "}")
-		return re.FindStringSubmatch(str)
+		re := regexp.MustCompile(".{1," + strconv.Itoa(step) + "}")
+		return re.FindAllString(str, -1)
 	} else {
 		a := []string{str}
 		return a
@@ -119,17 +120,19 @@ func Levenshtein(str1, str2 string) int {
 
 	// two rows
 	size := utf8.RuneCountInString(str2) + 1
-	prevRow := make([]int, size, size)
+	prevRow := make([]int, size)
 
 	// initialise previous row
-	for i := 0; i < len(prevRow); i += 1 {
+	i := 0
+	for i < len(prevRow) {
 		prevRow[i] = i
+		i += 1
 	}
 
 	nextCol := 0
 
 	// calculate current row distance from previous row
-	i := 0
+	i = 0
 	for i < utf8.RuneCountInString(str1) {
 		nextCol = i + 1
 		j := 0
@@ -230,11 +233,11 @@ func Prune(str string, length int, pruneStr string) string {
 	template := re.ReplaceAllStringFunc(str[0:length+1], tmpl) // 'Hello, world' -> 'HellAA AAAAA'
 
 	re = regexp.MustCompile(`\w\w`)
-	if re.MatchString(template[len(template)-2:]) {
+	if re.MatchString(template[utf8.RuneCountInString(template)-2:]) {
 		re = regexp.MustCompile(`\s*\S+$`)
 		template = re.ReplaceAllString(template, "")
 	} else {
-		template = strings.TrimRight(template[0:len(template)-1], " ")
+		template = strings.TrimRight(template[0:utf8.RuneCountInString(template)-1], " ")
 	}
 
 	if utf8.RuneCountInString(template+pruneStr) > utf8.RuneCountInString(str) {
