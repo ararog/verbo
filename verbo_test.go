@@ -151,7 +151,6 @@ func TestPred(t *testing.T) {
 	equal(t, Pred(","), "+")
 }
 
-/*
 func TestPrune(t *testing.T) {
 	equal(t, Prune("Hello, cruel world", 6, " read more"), "Hello read more");
   equal(t, Prune("Hello, world", 5, "read a lot more"), "Hello, world");
@@ -167,7 +166,6 @@ func TestPrune(t *testing.T) {
   equal(t, Prune("Привет, мир", 22, ""), "Привет, мир");
   equal(t, Prune("alksjd!!!!!!....", 100, ""), "alksjd!!!!!!....");
 }
-*/
 
 func TestRepeat(t *testing.T) {
 	equal(t, Repeat("foo", 0, ""), "")

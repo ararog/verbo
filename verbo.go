@@ -118,58 +118,30 @@ func Levenshtein(str1, str2 string) int {
 		return int(math.Max(float64(utf8.RuneCountInString(str1)), float64(utf8.RuneCountInString(str2))))
 	}
 
-	// two rows
-	size := utf8.RuneCountInString(str2) + 1
-	prevRow := make([]int, size)
+	f := make([]int, utf8.RuneCountInString(str2)+1)
 
-	// initialise previous row
-	i := 0
-	for i < len(prevRow) {
-		prevRow[i] = i
-		i += 1
+	for j := range f {
+		f[j] = j
 	}
 
-	nextCol := 0
+	for _, ca := range str1 {
+			j := 1
+			fj1 := f[0] // fj1 is the value of f[j - 1] in last iteration
+			f[0]++
+			for _, cb := range str2 {
+					mn := min(f[j]+1, f[j-1]+1) // delete & insert
+					if cb != ca {
+							mn = min(mn, fj1+1) // change
+					} else {
+							mn = min(mn, fj1) // matched
+					}
 
-	// calculate current row distance from previous row
-	i = 0
-	for i < utf8.RuneCountInString(str1) {
-		nextCol = i + 1
-		j := 0
-		for j < utf8.RuneCountInString(str2) {
-			curCol := nextCol
-
-			// substution
-			val := 0
-			if str1[i] == str2[j] {
-				val = 0
-			} else {
-				val = 1
+					fj1, f[j] = f[j], mn // save f[j] to fj1(j is about to increase), update f[j] to mn
+					j++
 			}
-
-			nextCol = prevRow[j] + val
-
-			// insertion
-			tmp := curCol + 1
-			if nextCol > tmp {
-				nextCol = tmp
-			}
-			// deletion
-			tmp = prevRow[j+1] + 1
-			if nextCol > tmp {
-				nextCol = tmp
-			}
-
-			// copy current col value into previous (in preparation for next iteration)
-			prevRow[j] = curCol
-			j += 1
-		}
-		// copy last col value into previous (in preparation for next iteration)
-		prevRow[j] = nextCol
-		i += 1
 	}
 
-	return nextCol
+	return f[len(f)-1]
 }
 
 func Lines(str string) []string {
@@ -217,33 +189,35 @@ func Prune(str string, length int, pruneStr string) string {
 		pruneStr = "..."
 	}
 
-	if utf8.RuneCountInString(str) <= length {
+	length = stringLengthToRunesSize(str, length)
+
+	if len(str) <= length {
 		return str
 	}
 
 	tmpl := func(c string) string {
 		if strings.ToUpper(c) != strings.ToLower(c) {
-			return "A"
+			return c
 		} else {
 			return " "
 		}
 	}
 
-	re := regexp.MustCompile(`.(?=\W*\w*$)`)
-	template := re.ReplaceAllStringFunc(str[0:length+1], tmpl) // 'Hello, world' -> 'HellAA AAAAA'
+	re := regexp.MustCompile(`.(\W*\p{L}*$)`)
+	template := re.ReplaceAllStringFunc(str[0:length+sizeOfLastRunes(str, 1)], tmpl) // 'Hello, world' -> 'HellAA AAAAA'
 
-	re = regexp.MustCompile(`\w\w`)
-	if re.MatchString(template[utf8.RuneCountInString(template)-2:]) {
+	re = regexp.MustCompile(`\p{L}\p{L}`)
+	if re.MatchString(template[len(template)-sizeOfLastRunes(str, 2):]) {
 		re = regexp.MustCompile(`\s*\S+$`)
 		template = re.ReplaceAllString(template, "")
 	} else {
-		template = strings.TrimRight(template[0:utf8.RuneCountInString(template)-1], " ")
+		template = strings.TrimRight(template[0:len(template)-sizeOfLastRunes(str, 1)], " ")
 	}
 
-	if utf8.RuneCountInString(template+pruneStr) > utf8.RuneCountInString(str) {
+	if len(template+pruneStr) > len(str) {
 		return str
 	} else {
-		return str[0:utf8.RuneCountInString(template)] + pruneStr
+		return str[0:len(template)] + pruneStr
 	}
 }
 
@@ -277,7 +251,7 @@ func RightPad(str string, length int, padStr string) string {
 }
 
 func Slugify(str string) string {
-	re := regexp.MustCompile(`[^\w\s-]`)
+	re := regexp.MustCompile(`[^\p{Latin}+\w\s-]`)
 	str = re.ReplaceAllString(str, "-")
 	str = strings.ToLower(str)
 	str = CleanDiacritics(str)
