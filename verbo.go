@@ -147,7 +147,7 @@ func Levenshtein(str1, str2 string) int {
 				val = 1
 			}
 
-			nextCol := prevRow[j] + val
+			nextCol = prevRow[j] + val
 
 			// insertion
 			tmp := curCol + 1
