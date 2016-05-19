@@ -167,7 +167,7 @@ func TestPrune(t *testing.T) {
   equal(t, Prune("Привет, мир", 22, ""), "Привет, мир");
   equal(t, Prune("alksjd!!!!!!....", 100, ""), "alksjd!!!!!!....");
 }
-*/s
+*/
 
 func TestRepeat(t *testing.T) {
 	equal(t, Repeat("foo", 0, ""), "")
