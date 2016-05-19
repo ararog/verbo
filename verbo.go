@@ -181,6 +181,7 @@ func Pred(str string) string {
 	return adjacent(str, -1)
 }
 
+/*
 func Prune(str string, length int, pruneStr string) string {
 	length = int(math.Floor(float64(length)))
 	if pruneStr != "" {
@@ -220,6 +221,7 @@ func Prune(str string, length int, pruneStr string) string {
 		return str[0:len(template)] + pruneStr
 	}
 }
+*/
 
 func Repeat(str string, qty int, separator string) string {
 	qty = int(math.Floor(float64(qty)))
